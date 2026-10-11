@@ -1,0 +1,13 @@
+canvas {
+    width: 100vw;
+    height: 100vh;
+    background: #23232e;
+    display: flex;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+}
