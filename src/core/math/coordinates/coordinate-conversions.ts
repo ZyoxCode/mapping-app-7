@@ -1,7 +1,9 @@
 import type { Coordinates, MercatorCoordinates, RawCoordinates } from "./coordinate-types";
 
 export function convertCoordsToMercator(coordinates: Coordinates): MercatorCoordinates {
-    const { lat, lon } = coordinates;
+
+    const { lon, lat } = coordinates;
+
     const x = lon * (Math.PI / 180);
 
     const clampedLat = Math.max(Math.min(lat, 85.05112878), -85.05112878);
@@ -21,15 +23,15 @@ export function convertMercatorToCoords(coordinates: MercatorCoordinates): Coord
 
     const lat = latRad * (180 / Math.PI);
 
-    return { lat, lon };
+    return { lon, lat };
 }
 
 export function convertRawCoordsToCoords(coordinates: RawCoordinates): Coordinates {
-    return { lat: coordinates[0], lon: coordinates[1] };
+    return { lon: coordinates[0], lat: coordinates[1] };
 }
 
 export function convertCoordsToRawCoords(coordinates: Coordinates): RawCoordinates {
-    return [coordinates.lat, coordinates.lon];
+    return [coordinates.lon, coordinates.lat];
 }
 
 export function convertRawCoordsToMercator(coordinates: RawCoordinates): MercatorCoordinates {

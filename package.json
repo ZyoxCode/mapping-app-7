@@ -9,7 +9,11 @@
         "preview": "vite preview"
     },
     "devDependencies": {
+        "@types/shpjs": "^3.4.7",
         "typescript": "~6.0.2",
         "vite": "^8.3.0"
+    },
+    "dependencies": {
+        "shpjs": "^6.2.0"
     }
 }

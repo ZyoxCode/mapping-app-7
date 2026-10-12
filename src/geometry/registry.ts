@@ -17,7 +17,6 @@ export function setHandler<K extends keyof GeometryTypeCoordinateFormats>(
 export function getHandler<K extends keyof GeometryTypeCoordinateFormats>(
     type: K
 ): GeometryHandler<K> {
-    console.log(handlerRegistry);
     const handler = handlerRegistry.get(type);
     if (!handler) throw new Error(`No geometry type of name ${type} in handler registry`);
     return handler as GeometryHandler<K>;
