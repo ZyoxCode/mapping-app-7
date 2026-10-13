@@ -37,6 +37,5 @@ export async function loadFile(path: string): Promise<any> {
             throw new Error(`File extension \'.${fileExtension}\' is not supported.`);
     };
 
-    const collection = Array.isArray(data) ? data[0] : data;
-    return collection;
+    return data;
 }

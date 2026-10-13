@@ -30,6 +30,15 @@ export const geoJsonParser: FeatureParser = (data: any) => {
     }
 };
 
+export const labelPointParser: FeatureParser = (data: any) => {
+    console.log(data);
+    return data.map((feature: any) => {
+        feature.geometry = { 'type': 'Point', coordinates: feature.point }
+        delete feature.point;
+        return feature;
+    })
+}
+
 /** CSV/TSV text with lat/lon columns -> Point features. */
 export const csvPointParser = (latKey = "lat", lonKey = "lon", delimiter = ","): FeatureParser =>
     (data) => {
@@ -51,6 +60,8 @@ export const csvPointParser = (latKey = "lat", lonKey = "lon", delimiter = ","):
             } as RawFeature;
         });
     };
+
+
 
 /** Escape hatch: wrap any one-off conversion. */
 export const customParser = (fn: (data: any) => RawFeature[]): FeatureParser => fn;

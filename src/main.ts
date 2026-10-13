@@ -1,6 +1,7 @@
 import type { ZoomLevel } from "./core/zoom-levels";
 import { FeaturePipeline } from "./data/feature-pipeline";
 import { geometryTypeIn } from "./data/filters";
+import { labelPointParser } from "./data/parsers";
 import { FileFeatureSource, RawFeatureSource } from "./data/sources";
 import { autoMinZoom, normalizeZoom } from "./data/transforms";
 import { GeoMap } from "./geo-map/geo-map";
@@ -59,16 +60,18 @@ const LAYERS: Layer[] = [
         style: { fillStyle: COLORS.land },
     }),
     new FeatureLayer({
-        name: 'lakes',
+        name: 'point-test',
         pipeline: new FeaturePipeline({
             source: new FileFeatureSource(
-                "water-polygons.geojson",
+                "country-labels.json",
+                labelPointParser,
             ),
-            transforms: [autoMinZoom(10), normalizeZoom],
-            filters: [geometryTypeIn("Polygon", "MultiPolygon")],
+            transforms: [normalizeZoom],
         }),
         style: {
-            fillStyle: COLORS.water,
+            strokeStyle: 'black',
+            lineWidth: 2,
+            strokeScales: true,
         }
     }),
 
