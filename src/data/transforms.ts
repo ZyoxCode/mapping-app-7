@@ -30,6 +30,19 @@ function largestPolygonArea(geometry: RawGeometryType): number | null {
     return max;
 }
 
+export const renameProperty = (oldKey: string, newKey: string): FeatureTransform => (feature: RawFeature) => {
+    const p = feature.properties;
+    if (!p[oldKey]) {
+        return feature;
+    }
+
+    if (oldKey === newKey) return feature;
+
+    p[newKey] = p[oldKey];
+    delete p[oldKey];
+    return feature;
+};
+
 /** Normalises min_zoom/max_zoom casing, applies defaults, snaps MIN_ZOOM to ZOOM_STEP. */
 export const normalizeZoom: FeatureTransform = feature => {
     const p = feature.properties;
@@ -47,5 +60,17 @@ export const normalizeZoom: FeatureTransform = feature => {
 export const autoMinZoom = (targetPx: number): FeatureTransform => feature => {
     const area = largestPolygonArea(feature.geometry);
     if (area !== null) feature.properties.MIN_ZOOM = areaToMinZoom(area, targetPx);
+    return feature;
+};
+
+export const autoMinZoomFromPreCalculated = (targetPx: number): FeatureTransform => feature => {
+    const area = feature.properties.area;
+    if (area !== null) feature.properties.MIN_ZOOM = areaToMinZoom(area, targetPx);
+    return feature;
+};
+
+export const addToMaxZoom = (amount: number): FeatureTransform => feature => {
+    const p = feature.properties;
+    p.MAX_ZOOM += amount;
     return feature;
 };

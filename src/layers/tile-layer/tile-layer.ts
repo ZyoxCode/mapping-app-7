@@ -1,11 +1,11 @@
 import { PbfReader } from "pbf";
 import { VectorTile } from "@mapbox/vector-tile";
 import { PMTiles } from "pmtiles";
-import type { Bounds } from "../core/math/bounds/bounds";
-import type { Viewport } from "../core/viewport";
-import { updateDebugSubBox } from "../debug/debug-box";
-import { applyStyle, resolveStyle } from "../styles/style-rule";
-import { Layer, type LayerOptions } from "./layer";
+import type { Bounds } from "../../core/math/bounds/bounds";
+import type { Viewport } from "../../core/viewport";
+import { updateDebugSubBox } from "../../debug/debug-box";
+import { applyStyle, resolveStyle } from "../../styles/style-rule";
+import { Layer, type LayerOptions } from "../layer";
 
 
 export type TileLayerOptions = Partial<LayerOptions> & {

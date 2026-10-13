@@ -31,9 +31,10 @@ export const geoJsonParser: FeatureParser = (data: any) => {
 };
 
 export const labelPointParser: FeatureParser = (data: any) => {
-    console.log(data);
     return data.map((feature: any) => {
         feature.geometry = { 'type': 'Point', coordinates: feature.point }
+        feature.properties.LABEL_X = feature.point[0];
+        feature.properties.LABEL_Y = feature.point[1];
         delete feature.point;
         return feature;
     })

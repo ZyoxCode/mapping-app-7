@@ -55,9 +55,9 @@ export function isPointInBounds(bounds: Bounds, point: MercatorCoordinates) {
         && point.x <= bounds.maxCorner.x;
 }
 
-export function offsetBounds(bounds: Bounds, offset: MercatorCoordinates) {
-    bounds.minCorner.y += offset.y;
-    bounds.minCorner.x += offset.x;
-    bounds.maxCorner.y += offset.y;
-    bounds.maxCorner.x += offset.x;
+export function offsetBounds(bounds: Bounds, offset: MercatorCoordinates): Bounds {
+    return {
+        minCorner: { y: bounds.minCorner.y + offset.y, x: bounds.minCorner.x + offset.x },
+        maxCorner: { y: bounds.maxCorner.y + offset.y, x: bounds.maxCorner.x + offset.x }
+    }
 }

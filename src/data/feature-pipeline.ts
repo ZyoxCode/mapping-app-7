@@ -42,8 +42,10 @@ export class FeaturePipeline {
 
     prepareFeatures(features: RawFeature[]): PreparedFeature[] {
         return features.flatMap(feature => {
+
             const geometry = prepareGeometry(feature.geometry, this.zoomLevels);
             if (!geometry) return [];
+            //if (feature.properties.ADM0_LEFT == 'Egypt') console.log(feature.properties, geometry);
             return [{ geometry, properties: feature.properties }];
         });
     }
@@ -58,6 +60,7 @@ export class FeaturePipeline {
     async run(): Promise<PipelineResult> {
         const raw = await this.source.load();
         const transformed = this.transformFeatures(raw);
+
         const prepared = this.prepareFeatures(transformed);
         const features = this.buildFeatures(prepared);
 

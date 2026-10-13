@@ -20,7 +20,7 @@ const rawDefaults: ResolvedStyleOptions = {
     lineWidth: 1,
     font: "10px sans-serif",
     dashed: [],
-    textAlign: "left",
+    textAlign: "center",
     lineCap: "round",
     lineJoin: "round",
     strokeScales: true,
