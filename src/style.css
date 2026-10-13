@@ -31,3 +31,34 @@ body {
 #debug-box>div {
     display: block;
 }
+
+#layer-toggles {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    padding: 5px;
+    margin: 0;
+
+    font-family: 'Outfit';
+    font-size: 18px;
+    color: white;
+    -webkit-text-stroke: 2px black;
+    paint-order: stroke fill;
+
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+#layer-toggles>.layer-toggle {
+    display: block;
+    cursor: pointer;
+    user-select: none;
+}
+
+#layer-toggles>.layer-toggle:hover {
+    opacity: 0.8;
+}
+
+#layer-toggles>.layer-toggle.off {
+    opacity: 0.5;
+    text-decoration: line-through;
+}

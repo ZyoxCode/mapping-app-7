@@ -5,7 +5,17 @@ import type { ScreenCoordinates } from "./math/coordinates/coordinate-types";
 export const TILE_SIZE = 256;
 const WORLD_RADIANS = 2 * Math.PI;
 const INITIAL_ZOOM = 1.5;
-const ZOOM_STEP = 0.0015;
+
+/**
+ * Zoom levels moved per mouse-wheel notch. Zoom always lands on a multiple of this, so pick a
+ * value that divides 1 (0.25, 0.5, 1) if you want whole zoom levels, where tiles are drawn at
+ * their native resolution, to be reachable.
+ */
+const ZOOM_STEP = 0.25;
+/** Wheel delta, in pixels, that counts as one notch. A typical mouse wheel notch is 100. */
+const WHEEL_NOTCH = 100;
+/** Leftover partial scroll (e.g. from a trackpad) is forgotten after this long without wheel events. */
+const WHEEL_RESET_MS = 200;
 
 
 export class Viewport {
@@ -78,6 +88,19 @@ export class Viewport {
         this.updateVisibleBounds();
     }
 
+    /**
+     * Zooms by a whole number of ZOOM_STEPs (positive = in, negative = out), landing exactly on a
+     * multiple of ZOOM_STEP. If the current zoom is between two multiples, the first step goes to
+     * the next multiple in that direction. The point under (sx, sy) stays fixed on screen.
+     */
+    zoomStepsAtPoint(point: ScreenCoordinates, steps: number): void {
+        const EPS = 1e-6; // so float noise like 5.999999999 still counts as "on the grid"
+        const k = this.convertScaleToZoom(this.scale) / ZOOM_STEP;
+        const index = steps > 0 ? Math.floor(k + EPS) + steps : Math.ceil(k - EPS) + steps;
+        const target = this.convertZoomToScale(index * ZOOM_STEP);
+        this.updateScaleAtPoint(point, target / this.scale);
+    }
+
     resize(width: number, height: number): void {
         this.updateTranslate({ x: (width - this.width) / 2, y: (height - this.height) / 2 });
         this.height = height;
@@ -114,13 +137,29 @@ export class Viewport {
             // if (Math.hypot(e.clientX - this.down.x, e.clientY - this.down.y) > 4) return; // just a click not a pan;
         }
 
+        // Wheel events report different amounts depending on the device: a mouse notch is ~100 px in
+        // Chrome but 3 lines in Firefox, and trackpads send many small deltas. We normalise to pixels
+        // and add them up, so every WHEEL_NOTCH of scrolling is exactly one ZOOM_STEP.
+        let wheelAccum = 0;
+        let lastWheelTime = 0;
+
         const onMouseWheel = (e: WheelEvent) => {
             e.preventDefault();
+
+            // deltaMode: 0 = pixels, 1 = lines (3 per notch), 2 = pages
+            const pixels = e.deltaY * (e.deltaMode === 1 ? WHEEL_NOTCH / 3 : e.deltaMode === 2 ? 800 : 1);
+
+            if (e.timeStamp - lastWheelTime > WHEEL_RESET_MS) wheelAccum = 0;
+            lastWheelTime = e.timeStamp;
+
+            wheelAccum += pixels;
+            const notches = Math.trunc(wheelAccum / WHEEL_NOTCH);
+            if (notches === 0) return;
+            wheelAccum -= notches * WHEEL_NOTCH;
+
             const rect = canvas.getBoundingClientRect();
-            this.updateScaleAtPoint(
-                { x: e.clientX - rect.left, y: e.clientY - rect.top },
-                Math.exp(-e.deltaY * ZOOM_STEP)
-            )
+            // deltaY > 0 means scrolling down, which zooms out
+            this.zoomStepsAtPoint({ x: e.clientX - rect.left, y: e.clientY - rect.top }, -notches);
             onChange();
         }
 
@@ -133,10 +172,7 @@ export class Viewport {
     }
 
     debugBox(): void {
-        updateDebugSubBox('translate', `Translate: [${this.translate.x.toFixed(2)}, ${this.translate.y.toFixed(2)}]`);
-        updateDebugSubBox('scale', `Scale: ${this.scale.toFixed(2)}`);
-        updateDebugSubBox('bounds', `Visible Bounds: 
-            [${this.visibleBounds.minCorner.x.toFixed(2)}, ${this.visibleBounds.minCorner.y.toFixed(2)}] -> 
-            [${this.visibleBounds.maxCorner.x.toFixed(2)}, ${this.visibleBounds.maxCorner.y.toFixed(2)}]`);
+        updateDebugSubBox('Zoom', `Zoom: ${this.convertScaleToZoom(this.scale).toFixed(2)}`);
+
     }
 }

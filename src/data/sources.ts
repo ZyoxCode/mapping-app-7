@@ -1,36 +1,34 @@
-
-import type { ZoomLevel } from "../core/zoom-levels";
 import type { RawFeature } from "../features/features";
 import { loadFile } from "../core/utils/file";
+import { geoJsonParser, type FeatureParser } from "./parsers";
 
-
-
-
-
-
-export abstract class FeatureSource {
-    abstract load(): Promise<any>;
+/** A source fetches data and always yields RawFeature[]. */
+export interface FeatureSource {
+    load(): Promise<RawFeature[]>;
 }
 
-export class FileFeatureSource extends FeatureSource {
+export class FileFeatureSource implements FeatureSource {
     private path: string;
-    constructor(path: string) {
-        super();
+    private parser: FeatureParser;
+
+    constructor(path: string, parser: FeatureParser = geoJsonParser) {
         this.path = path;
+        this.parser = parser;
     }
-    async load(): Promise<any> { //change this later to have extensions for each file type
-        return loadFile(this.path)
+
+    async load(): Promise<RawFeature[]> {
+        return this.parser(await loadFile(this.path));
     }
 }
 
-export class RawFeatureSource extends FeatureSource {
-    private rawFeatures: RawFeature[];
-    constructor(rawFeatures: RawFeature[]) {
-        super();
-        this.rawFeatures = rawFeatures;
+export class RawFeatureSource implements FeatureSource {
+    private features: RawFeature[];
+
+    constructor(features: RawFeature[]) {
+        this.features = features;
     }
 
-    async load(): Promise<any> {
-        return Promise.resolve(this.rawFeatures);
+    async load(): Promise<RawFeature[]> {
+        return this.features;
     }
 }

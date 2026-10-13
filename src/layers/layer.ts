@@ -1,7 +1,5 @@
-import { doBoundsIntersect } from "../core/math/bounds/bounds";
 import type { Viewport } from "../core/viewport";
 import { zoomLevelIndex } from "../core/zoom-levels";
-import type { FeatureSource } from "../data/sources";
 import type { BuiltFeature } from "../features/features";
 import { appendToPath } from "../geometry/utils";
 import { applyStyle, normalizeStyle, resolveStyle, type DynamicStyleOptions, type ResolvedStyleOptions, type StyleInput } from "../styles/style-rule";
@@ -35,6 +33,10 @@ export abstract class Layer {
     name: string;
     debug: boolean;
     ready: boolean = false;
+    /** When false, GeoMap skips rendering this layer (it still loads). */
+    visible: boolean = true;
+    /** Layers that update asynchronously (e.g. tiles arriving) call this to request a redraw. GeoMap sets it. */
+    onChange: () => void = () => { };
     style: Partial<DynamicStyleOptions> | null;
     constructor(options: Partial<LayerOptions>) {
         const merged = mergeWithDefaults(options, DEFAULT_LAYER_OPTIONS);
@@ -49,10 +51,9 @@ export abstract class Layer {
 }
 
 export class FeatureLayer extends Layer {
-    private loggedZoom = false;
     pipeline: FeaturePipeline;
     features: BuiltFeature[] = [];
-    private bboxes = new Float64Array(0);
+    private bboxes: Float64Array = new Float64Array(0);
     constructor(options: Partial<LayerOptions> & { pipeline: FeaturePipeline }) {
         super(options);
         this.pipeline = options.pipeline;
@@ -67,13 +68,11 @@ export class FeatureLayer extends Layer {
 
         if (this.name == 'land') updateDebugSubBox('zoomIndex', `Zoom Index: ${zoomIndex}`);
 
-        ctx.fillStyle = "red";
-
         const vb = viewport.visibleBounds;
         const vMinX = vb.minCorner.x, vMinY = vb.minCorner.y;
         const vMaxX = vb.maxCorner.x, vMaxY = vb.maxCorner.y;
 
-        const end = countVisibleAtZoom(this.features, zoom);   // binary search (below)
+        const end = countVisibleAtZoom(this.features, zoom);   // binary search (above)
         const bb = this.bboxes;
 
         for (let i = 0; i < end; i++) {
@@ -99,19 +98,9 @@ export class FeatureLayer extends Layer {
     }
 
     async load() {
-        const built = await this.pipeline.pipeline();
-        built.sort((a, b) => a.properties.MIN_ZOOM - b.properties.MIN_ZOOM);
-        this.features = built;
-
-        const bb = new Float64Array(built.length * 4);
-        built.forEach((f, i) => {
-            const b = f.geometry.bbox;
-            bb[i * 4] = b.minCorner.x;
-            bb[i * 4 + 1] = b.minCorner.y;
-            bb[i * 4 + 2] = b.maxCorner.x;
-            bb[i * 4 + 3] = b.maxCorner.y;
-        });
-        this.bboxes = bb;
+        const { features, bboxes } = await this.pipeline.run();
+        this.features = features;
+        this.bboxes = bboxes;
         this.ready = true;
     }
 }

@@ -1,4 +1,5 @@
 import { Viewport } from "../core/viewport";
+import { addLayerToggle } from "../debug/layer-toggles";
 import type { Layer } from "../layers/layer";
 
 const LOGGING_TAG = "[Main Map]";
@@ -24,6 +25,11 @@ export class GeoMap {
         this.viewport.debugBox();
 
         this.loggingEnabled = loggingEnabled;
+
+        for (const layer of this.layers) {
+            layer.onChange = () => this.requestRedraw();
+            addLayerToggle(layer, () => this.requestRedraw());
+        }
     }
 
     async load() {
@@ -73,7 +79,7 @@ export class GeoMap {
         ctx.save();
         ctx.setTransform(dpr * viewport.scale, 0, 0, -dpr * viewport.scale, dpr * viewport.translate.x, dpr * viewport.translate.y);
         for (const layer of this.layers) {
-            if (!layer.ready) continue;
+            if (!layer.ready || !layer.visible) continue;
             layer.render(ctx, viewport);
         }
         ctx.restore();

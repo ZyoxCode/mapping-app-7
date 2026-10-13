@@ -1,9 +1,11 @@
 import type { ZoomLevel } from "./core/zoom-levels";
 import { FeaturePipeline } from "./data/feature-pipeline";
-import { FileAdapterCreateZooms, RawAdapter } from "./data/file-adapter";
+import { geometryTypeIn } from "./data/filters";
 import { FileFeatureSource, RawFeatureSource } from "./data/sources";
+import { autoMinZoom, normalizeZoom } from "./data/transforms";
 import { GeoMap } from "./geo-map/geo-map";
 import { FeatureLayer, type Layer } from "./layers/layer";
+import { TileLayer } from "./layers/tile-layer";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -26,24 +28,35 @@ const LAYERS: Layer[] = [
                     coordinates: [[[-180, -90], [180, -90], [180, 90], [-180, 90]]]
                 }
             }]),
-            adapter: new RawAdapter(),
         }),
         style: {
             fillStyle: COLORS.water,
         }
 
     }),
-    new FeatureLayer({
+    // new FeatureLayer({
+    //     name: 'land',
+    //     pipeline: new FeaturePipeline({
+    //         source: new FileFeatureSource(
+    //             "ne_10m_land.zip",
+    //         ),
+    //         transforms: [autoMinZoom(1), normalizeZoom],
+    //     }),
+    //     style: {
+    //         fillStyle: COLORS.land,
+    //     }
+    // }),
+    new TileLayer({
         name: 'land',
-        pipeline: new FeaturePipeline({
-            source: new FileFeatureSource(
-                "ne_10m_land.zip",
-            ),
-            adapter: new FileAdapterCreateZooms(1)
-        }),
-        style: {
-            fillStyle: COLORS.land,
-        }
+        path: 'land.pmtiles',
+        sourceLayer: 'land',
+        style: { fillStyle: COLORS.land },
+    }),
+    new TileLayer({
+        name: 'land-test',
+        path: 'land-test.pmtiles',
+        sourceLayer: 'land',
+        style: { fillStyle: COLORS.land },
     }),
     new FeatureLayer({
         name: 'lakes',
@@ -51,41 +64,14 @@ const LAYERS: Layer[] = [
             source: new FileFeatureSource(
                 "water-polygons.geojson",
             ),
-            adapter: new FileAdapterCreateZooms(10)
+            transforms: [autoMinZoom(10), normalizeZoom],
+            filters: [geometryTypeIn("Polygon", "MultiPolygon")],
         }),
         style: {
             fillStyle: COLORS.water,
         }
-    })
-    // new FeatureLayer(
-    //     {
-    //         source: new DefinedFeatureSource(
-    //             [
-    //                 {
-    //                     properties: {},
-    //                     geometry: {
-    //                         type: "Polygon",
-    //                         coordinates: [[[-180, -90], [180, -90], [180, 90], [-180, 90]]]
-    //                     }
-    //                 }
-    //             ]
-    //         ),
-    //         style: {
-    //             fillStyle: COLORS.water,
-    //         }
-    //     }
-    // ),
-    // new FeatureLayer(
-    //     {
-    //         name: 'land',
-    //         source: new FileFeatureSource(
-    //             "ne_110m_land.zip",
-    //         ),
-    //         style: {
-    //             fillStyle: COLORS.land,
-    //         }
-    //     }
-    // )
+    }),
+
 ];
 
 const geoMap = new GeoMap(canvas, LAYERS, true);
